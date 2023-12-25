@@ -17,29 +17,6 @@ jobs:
     - name: Login to Docker Hub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    # Krok odpowiedzialny za usunięcie lokalnego obrazu 'latest'
-    - name: Remove local Docker image (if exists)
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        password: ${{ secrets.VPS_PASSWORD }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          docker rmi kathelan/budgetify-be:latest || true
-
-    # Krok odpowiedzialny za pobranie najnowszego obrazu 'latest'
-    - name: Pull the latest Docker image
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        password: ${{ secrets.VPS_PASSWORD }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          docker pull kathelan/budgetify-be:latest
-
-    # Krok odpowiedzialny za wdrożenie obrazu Docker na serwerze VPS
     - name: Deploy on VPS
       uses: appleboy/ssh-action@master
       with:
@@ -48,8 +25,17 @@ jobs:
         password: ${{ secrets.VPS_PASSWORD }}
         port: ${{ secrets.VPS_PORT }}
         script: |
+          # Usuń istniejący kontener (jeśli istnieje), bez błędów jeśli nie istnieje
           docker stop my-container || true
           docker rm my-container || true
+
+          # Usuń lokalny obraz (jeśli istnieje), bez błędów jeśli nie istnieje
+          docker rmi kathelan/budgetify-be:latest || true
+
+          # Pobierz najnowszy obraz
+          docker pull kathelan/budgetify-be:latest
+
+          # Uruchom kontener z nowym obrazem
           docker run -d --restart always --name my-container \
           -p 0.0.0.0:8080:8080 \
           -e DB_URL=${{ secrets.DB_URL }} \
