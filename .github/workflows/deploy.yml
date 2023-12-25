@@ -36,7 +36,7 @@ jobs:
           docker pull kathelan/budgetify-be:latest
 
           # Uruchom kontener z nowym obrazem
-          docker run -d --restart always --name my-container \
+          docker run --network=my-network -d --restart always --name my-container \
           -p 0.0.0.0:8080:8080 \
           -e DB_URL=${{ secrets.DB_URL }} \
           -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
