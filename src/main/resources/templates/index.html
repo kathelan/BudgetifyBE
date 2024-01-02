@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Public Page</title>
+</head>
+<body>
+<p>This is a public page.</p>
+<a href="/user">User</a> |
+<form action="/logout" method="post" style="display: inline;">
+    <input type="submit" value="Log Out"/>
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+</form>
+</body>
+</html>
