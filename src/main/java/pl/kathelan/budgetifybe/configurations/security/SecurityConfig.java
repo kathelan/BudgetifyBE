@@ -16,6 +16,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class SecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
+
     @Autowired
     public SecurityConfig(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -23,6 +24,7 @@ public class SecurityConfig {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        // In-memory authentication to set up a user
         auth.inMemoryAuthentication()
                 .withUser("user")
                 .password(passwordEncoder.encode("password"))
@@ -32,40 +34,38 @@ public class SecurityConfig {
     @Bean
     DefaultSecurityFilterChain springSecurity(HttpSecurity http) throws Exception {
         http
-                // Ochrona przed CSRF (Cross-Site Request Forgery)
+                // CSRF (Cross-Site Request Forgery) protection
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 
-                // Zabezpieczenia dotyczące sesji
+                // Session management configuration
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
 
-                // Konfiguracja formularza logowania
+                // Login form configuration
                 .formLogin(formLogin -> formLogin
-                        .loginPage("/login") // URL strony logowania
-                        .defaultSuccessUrl("/", true) // URL przekierowania po pomyślnym logowaniu
-                        .failureUrl("/login-error") // URL przekierowania w przypadku błędu logowania
-                        .permitAll() // Dostęp do strony logowania dla wszystkich
+                        .loginPage("/login") // URL of the login page
+                        .defaultSuccessUrl("/", true) // URL to redirect after successful login
+                        .failureUrl("/login-error") // URL to redirect in case of login error
+                        .permitAll() // Allow access to the login page for everyone
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .accessDeniedPage("/login"))
+                        .accessDeniedPage("/login")) // Custom page in case of access denied
 
-                // Konfiguracja wylogowania
+                // Logout configuration
                 .logout(logout -> logout
-                        .logoutSuccessUrl("/login?logout") // URL przekierowania po wylogowaniu
-                        .invalidateHttpSession(true) // Unieważnij sesję przy wylogowaniu
-                        .clearAuthentication(true) // Wyczyść uwierzytelnianie przy wylogowaniu
-                        .permitAll() // Dostęp do wylogowania dla wszystkich
+                        .logoutSuccessUrl("/login?logout") // URL to redirect after logout
+                        .invalidateHttpSession(true) // Invalidate session on logout
+                        .clearAuthentication(true) // Clear authentication on logout
+                        .permitAll() // Allow logout for everyone
                 )
 
-                // Zabezpieczenia endpointów
+                // Endpoint security configuration
                 .authorizeRequests(auth -> auth
-                        .requestMatchers( "/login", "/register").permitAll() // Dostęp do wybranych stron bez uwierzytelniania
-                        .anyRequest().authenticated() // Wszystkie inne żądania wymagają uwierzytelnienia
+                        .requestMatchers("/login", "/register").permitAll() // Allow access without authentication to certain URLs
+                        .anyRequest().authenticated() // Other requests require authentication
                 );
 
         return http.build();
     }
-
-
 }
